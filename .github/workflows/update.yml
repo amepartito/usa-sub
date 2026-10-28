@@ -1,4 +1,4 @@
-name: Multi-country Shadowsocks Subscriptions
+name: Shadowmere Country Subscriptions
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: shadowmere-multicountry-sub
+  group: shadowmere-country-subscriptions
   cancel-in-progress: false
 
 jobs:
@@ -18,16 +18,17 @@ jobs:
     timeout-minutes: 12
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           persist-credentials: true
 
-      - name: Build all available countries from Shadowmere
+      - name: Generate country subscriptions and Persian GitHub guides
         shell: bash
         run: |
           python3 - <<'PYTHON'
           import base64
           import binascii
+          import json
           import os
           import re
           import time
@@ -37,170 +38,248 @@ jobs:
           from collections import defaultdict
           from pathlib import Path
 
-          B64_URL = 'https://shadowmere.xyz/api/b64sub/'
-          COUNTRY_CODES_URL = 'https://shadowmere.xyz/api/country-codes/'
-          FLAG_RE = re.compile(r'^([\U0001f1e6-\U0001f1ff]{2})(?:\s|$)')
-          CODE_RE = re.compile(r'^[a-z]{2}$')
-          LABELS_FA = {
-              'us': 'آمریکا', 'fr': 'فرانسه', 'de': 'آلمان', 'gb': 'بریتانیا',
-              'ca': 'کانادا', 'nl': 'هلند', 'se': 'سوئد', 'ch': 'سوئیس',
-              'tr': 'ترکیه', 'ae': 'امارات', 'jp': 'ژاپن', 'kr': 'کره جنوبی',
-              'sg': 'سنگاپور', 'au': 'استرالیا', 'it': 'ایتالیا', 'es': 'اسپانیا',
-              'at': 'اتریش', 'be': 'بلژیک', 'fi': 'فنلاند', 'no': 'نروژ',
-              'dk': 'دانمارک', 'pl': 'لهستان', 'ru': 'روسیه', 'br': 'برزیل',
-              'in': 'هند', 'hk': 'هنگ‌کنگ', 'ie': 'ایرلند', 'pt': 'پرتغال',
-              'cz': 'چک', 'ro': 'رومانی', 'ua': 'اوکراین', 'tw': 'تایوان',
-              'id': 'اندونزی', 'th': 'تایلند', 'vn': 'ویتنام', 'my': 'مالزی',
-              'il': 'اسرائیل', 'ar': 'آرژانتین', 'mx': 'مکزیک', 'za': 'آفریقای جنوبی',
+          SOURCE = 'https://shadowmere.xyz/api/b64sub/'
+          COUNTRY_NAMES = 'https://shadowmere.xyz/api/country-codes/'
+          FLAG_RE = re.compile(r'^([\U0001F1E6-\U0001F1FF]{2})(?:\s|$)')
+          COUNTRY_RE = re.compile(r'^[a-z]{2}$')
+          FA = {
+              'ae': 'امارات', 'al': 'آلبانی', 'ar': 'آرژانتین',
+              'at': 'اتریش', 'au': 'استرالیا', 'be': 'بلژیک',
+              'br': 'برزیل', 'ca': 'کانادا', 'ch': 'سوئیس',
+              'cn': 'چین', 'cz': 'چک', 'de': 'آلمان',
+              'dk': 'دانمارک', 'eg': 'مصر', 'es': 'اسپانیا',
+              'fi': 'فنلاند', 'fr': 'فرانسه', 'gb': 'بریتانیا',
+              'gr': 'یونان', 'hk': 'هنگ‌کنگ', 'hu': 'مجارستان',
+              'id': 'اندونزی', 'ie': 'ایرلند', 'il': 'اسرائیل',
+              'in': 'هند', 'ir': 'ایران', 'it': 'ایتالیا',
+              'jp': 'ژاپن', 'kr': 'کره جنوبی', 'lu': 'لوکزامبورگ',
+              'mx': 'مکزیک', 'my': 'مالزی', 'nl': 'هلند',
+              'no': 'نروژ', 'nz': 'نیوزیلند', 'ph': 'فیلیپین',
+              'pl': 'لهستان', 'pt': 'پرتغال', 'ro': 'رومانی',
+              'ru': 'روسیه', 'sa': 'عربستان سعودی', 'se': 'سوئد',
+              'sg': 'سنگاپور', 'th': 'تایلند', 'tr': 'ترکیه',
+              'tw': 'تایوان', 'ua': 'اوکراین', 'uk': 'بریتانیا',
+              'us': 'آمریکا', 'vn': 'ویتنام', 'za': 'آفریقای جنوبی',
           }
 
-
-          def get_bytes(url, attempts=3):
+          def fetch(url, retries=3):
               request = urllib.request.Request(url, headers={
-                  'User-Agent': 'Shadowmere-Multicountry/1.0 (GitHub Actions)',
-                  'Accept': 'text/plain, application/json;q=0.9, */*;q=0.8',
+                  'User-Agent': 'Country-Subs-GitHub/2.0',
+                  'Accept': 'text/plain,application/json;q=0.9,*/*;q=0.5',
               })
-              for n in range(attempts):
+              for attempt in range(retries):
                   try:
                       with urllib.request.urlopen(request, timeout=35) as response:
                           if response.status != 200:
-                              raise RuntimeError(f'Upstream status: {response.status}')
-                          result = response.read(12 * 1024 * 1024 + 1)
-                          if len(result) > 12 * 1024 * 1024:
-                              raise RuntimeError('Upstream response exceeded 12 MiB')
-                          return result
-                  except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, OSError) as exc:
-                      if n == attempts - 1:
-                          raise RuntimeError(f'Source unavailable: {url}') from exc
-                      print(f'Retry {n+1}: {type(exc).__name__}', flush=True)
-                      time.sleep(20 if n == 0 else 65)
+                              raise RuntimeError('Source HTTP ' + str(response.status))
+                          content = response.read(12 * 1024 * 1024 + 1)
+                          if len(content) > 12 * 1024 * 1024:
+                              raise RuntimeError('Source content too large')
+                          return content
+                  except (urllib.error.HTTPError, urllib.error.URLError,
+                          TimeoutError, OSError) as exc:
+                      if attempt == retries - 1:
+                          raise RuntimeError('Source unavailable: ' + url) from exc
+                      print('Retry source:', type(exc).__name__, flush=True)
+                      time.sleep(20 if attempt == 0 else 65)
 
-
-          def parse_b64_feed(payload):
-              encoded = re.sub(rb'\s+', b'', payload)
-              if not encoded or len(encoded) > 12 * 1024 * 1024:
-                  raise ValueError('Invalid/oversized subscription response')
+          def parse_feed(raw):
+              encoded = re.sub(rb'\s+', b'', raw)
+              if not encoded:
+                  raise RuntimeError('Empty subscription from source')
               encoded += b'=' * (-len(encoded) % 4)
               try:
                   plain = base64.b64decode(encoded, validate=True).decode('utf-8')
               except (binascii.Error, UnicodeDecodeError) as exc:
-                  raise ValueError('Subscription response is not a valid Base64 UTF-8 feed') from exc
+                  raise RuntimeError('Invalid Base64 subscription') from exc
               groups = defaultdict(list)
               seen = defaultdict(set)
-              dropped = 0
+              invalid = 0
               for line in plain.splitlines():
                   line = line.strip()
                   if not line.startswith('ss://') or '#' not in line:
-                      dropped += 1
+                      invalid += 1
                       continue
                   uri, fragment = line.split('#', 1)
+                  if not uri[5:]:
+                      invalid += 1
+                      continue
                   label = urllib.parse.unquote(fragment).strip()
                   match = FLAG_RE.match(label)
                   if not match:
-                      dropped += 1
+                      invalid += 1
                       continue
-                  flag_emoji = match.group(1)
-                  country = ''.join(chr(ord(char) - 0x1F1E6 + ord('a')) for char in flag_emoji)
-                  if not CODE_RE.fullmatch(country):
-                      dropped += 1
+                  code = ''.join(chr(ord(c) - 0x1F1E6 + ord('a')) for c in match.group(1))
+                  if not COUNTRY_RE.fullmatch(code):
+                      invalid += 1
                       continue
-                  if uri in seen[country]:
+                  if uri in seen[code]:
                       continue
-                  seen[country].add(uri)
-                  groups[country].append(uri + '#' + urllib.parse.quote(label, safe=''))
+                  seen[code].add(uri)
+                  groups[code].append(uri + '#' + urllib.parse.quote(label, safe=''))
               if not groups:
-                  raise ValueError('No country-tagged Shadowsocks nodes found; existing files left untouched')
-              return dict(groups), dropped
+                  raise RuntimeError('No valid country-tagged nodes; preserving published files')
+              return dict(groups), invalid
 
-
-          def names_for_active_countries():
+          def optional_country_names():
               try:
-                  import json
-                  data = json.loads(get_bytes(COUNTRY_CODES_URL, attempts=1).decode('utf-8'))
+                  data = json.loads(fetch(COUNTRY_NAMES, retries=1).decode('utf-8'))
                   if not isinstance(data, list):
                       return {}
                   return {
-                      item['code'].lower(): item['name']
-                      for item in data
-                      if isinstance(item, dict)
-                      and isinstance(item.get('code'), str)
-                      and CODE_RE.fullmatch(item['code'].lower())
-                      and isinstance(item.get('name'), str)
+                      row['code'].lower(): row['name']
+                      for row in data
+                      if isinstance(row, dict)
+                      and isinstance(row.get('code'), str)
+                      and COUNTRY_RE.fullmatch(row['code'].lower())
+                      and isinstance(row.get('name'), str)
                   }
-              except (ValueError, UnicodeDecodeError, RuntimeError):
-                  print('Country name API unavailable; using country codes.', flush=True)
+              except (RuntimeError, ValueError, UnicodeDecodeError):
+                  print('Country names unavailable; code and Persian labels still work.')
                   return {}
 
+          def flag(code):
+              return ''.join(chr(0x1F1E6 + ord(c) - ord('a')) for c in code)
 
-          def flag_for_code(code):
-              return ''.join(chr(0x1F1E6 + ord(char) - ord('a')) for char in code)
+          def safe_cell(value):
+              return str(value).replace('|', '\\|').replace('\r', ' ').replace('\n', ' ')
 
-
-          def write_outputs(groups, country_names, repo, branch):
+          def publish_files(groups, names, repo, branch):
               out = Path('subs')
               out.mkdir(exist_ok=True)
-              # Remove only files managed by this workflow, never unrelated repository files.
-              for previous in out.iterdir():
-                  if not previous.is_file():
+              # The only supported URL format is /subs/xx (two lowercase letters).
+              # Remove legacy duplicate /subs/xx.txt files and missing countries.
+              for entry in out.iterdir():
+                  if not entry.is_file():
                       continue
-                  managed_code = previous.name[:-4] if previous.name.endswith('.txt') else previous.name
-                  if CODE_RE.fullmatch(managed_code) and managed_code not in groups:
-                      previous.unlink()
+                  if COUNTRY_RE.fullmatch(entry.name) or (
+                      entry.name.endswith('.txt') and COUNTRY_RE.fullmatch(entry.name[:-4])
+                  ):
+                      entry.unlink()
+              # Delete the old root-level USA subscription. Never create it again.
+              Path('us.txt').unlink(missing_ok=True)
 
               base = f'https://raw.githubusercontent.com/{repo}/{branch}/subs/'
               rows = []
-              for code in sorted(groups):
-                  data = ('\n'.join(groups[code]) + '\n').encode('utf-8')
-                  encoded = base64.b64encode(data).decode('ascii') + '\n'
-                  (out / code).write_text(encoded, encoding='ascii')
-                  (out / f'{code}.txt').write_text(encoded, encoding='ascii')
-                  country = country_names.get(code) or code.upper()
-                  country = country.replace('|', '\\|').replace('\n', ' ')
-                  fa_name = LABELS_FA.get(code, '—')
-                  rows.append(f'| {flag_for_code(code)} | {fa_name} | {country} | `{code}` | {len(groups[code])} | [لینک ساب]({base}{code}) |')
+              for code, nodes in sorted(groups.items()):
+                  payload = ('\n'.join(nodes) + '\n').encode('utf-8')
+                  (out / code).write_text(base64.b64encode(payload).decode('ascii') + '\n', encoding='ascii')
+                  name = safe_cell(names.get(code) or code.upper())
+                  persian = FA.get(code, '—')
+                  rows.append(
+                      f'| {flag(code)} | {persian} | {name} | `{code}` | {len(nodes)} | '
+                      f'[دریافت ساب]({base}{code}) |'
+                  )
 
-              # Preserve the previous Hiddify/Streisand US subscription URL.
-              if 'us' in groups:
-                  (Path('us.txt')).write_text((out / 'us').read_text(encoding='ascii'), encoding='ascii')
-              else:
-                  # No stale US nodes when the source no longer has active US proxies.
-                  Path('us.txt').write_text('', encoding='ascii')
-
-              header = (
-                  '# راهنمای سابسکریپشن کشورهای Shadowmere\n\n'
-                  'فقط دو حرف انتهای لینک را عوض کنید؛ مثلاً `.../subs/us`، `.../subs/fr`، `.../subs/de`.\n\n'
-                  'این جدول فقط کشورهایی را نشان می‌دهد که در آخرین به‌روزرسانی واقعاً کانفیگ فعال داشته‌اند.\n'
-                  'نام فعال در Shadowmere الزاماً به معنی اتصال موفق از اینترنت شما نیست.\n\n'
-                  f'**قالب لینک:** `{base}' + '<code>`\n\n'
-                  '| پرچم | نام فارسی | نام کشور در منبع | کد | تعداد کانفیگ | لینک |\n'
-                  '|---|---|---|---|---:|---|\n'
+              total = sum(len(items) for items in groups.values())
+              link = f'https://github.com/{repo}/blob/{branch}/COUNTRIES.md'
+              actions = f'https://github.com/{repo}/actions/workflows/update.yml'
+              sample = [c for c in ('us', 'fr', 'de', 'gb', 'nl', 'ca', 'jp') if c in groups]
+              if len(sample) < 4:
+                  sample = sorted(groups)[:7]
+              examples = '\n'.join(
+                  f'| {flag(c)} {FA.get(c, names.get(c, c.upper()))} | `{c}` | '
+                  f'[باز کردن لینک]({base}{c}) |' for c in sample
               )
-              Path('COUNTRIES.md').write_text(header + '\n'.join(rows) + '\n', encoding='utf-8')
-              print(f'Generated {len(groups)} countries and {sum(map(len, groups.values()))} nodes.', flush=True)
 
+              readme = f'''# 🌍 سابسکریپشن Shadowmere بر اساس کشور
+
+          [![Subscription Update](https://github.com/{repo}/actions/workflows/update.yml/badge.svg)]({actions})
+
+          **{len(groups)} کشور و {total} کانفیگ** در آخرین خروجی ثبت شده‌اند. فقط سرورهای دارای پرچم معتبر در سابسکریپشن فعال Shadowmere دسته‌بندی می‌شوند.
+
+          ## 🔗 استفاده سریع
+
+          آدرس پایه:
+
+          ```text
+          {base}
+          ```
+
+          فقط **دو حرف کد کشور را به انتهای آدرس اضافه کن**؛ همه کدها کوچک هستند. مثال:
+
+          | کشور | کد | سابسکریپشن |
+          |---|---|---|
+          {examples}
+
+          **[📋 فهرست کامل کشورها، تعداد سرورها و لینک هر کشور]({link})**
+
+          اگر کشوری در فهرست نیست، یعنی در آخرین دریافت موفق، سرور فعالِ برچسب‌دار برای آن پیدا نشده است.
+
+          ## 📱 نصب در Hiddify یا Streisand
+
+          1. لینک کشور موردنظر را از جدول بالا یا فایل `COUNTRIES.md` کپی کن.
+          2. در برنامه، گزینه افزودن پروفایل یا سابسکریپشن با URL را انتخاب کن.
+          3. لینک را وارد کن و پروفایل را به‌روزرسانی کن.
+          4. در دفعات بعد، همان لینک ثابت را نگه دار و پروفایل را Refresh/Update کن.
+
+          ## 🔄 به‌روزرسانی خودکار
+
+          - GitHub Actions هر **۳ ساعت** برای دریافت اطلاعات جدید تلاش می‌کند؛ زمان‌بندی ممکن است با تأخیر اجرا شود.
+          - در [صفحه Actions]({actions}) می‌توان نتیجه اجراها را دید و `Run workflow` را دستی اجرا کرد.
+          - اگر دریافت داده خراب شود، Workflow با خطا متوقف می‌شود و فایل‌های منتشرشده قبلی تغییر نمی‌کنند.
+          - فایل‌های کشورهایی که دیگر در خروجی معتبر نباشند از فهرست حذف می‌شوند.
+
+          ## 🧹 ساختار فایل‌ها
+
+          ```text
+          subs/us      آمریکا
+          subs/fr      فرانسه
+          subs/de      آلمان
+          ...          سایر کشورهای موجود
+          COUNTRIES.md  فهرست خودکار کشورها و لینک‌ها
+          README.md     همین راهنمای فارسی
+          ```
+
+          دیگر فایلی به نام `us.txt` در ریشه مخزن یا فایل‌های تکراری `subs/us.txt` و مشابه آن منتشر نمی‌شود. **آدرس قدیمی `.../main/us.txt` را از برنامه پاک کن و از `.../main/subs/us` استفاده کن.**
+
+          ## ⚠️ نکات مهم
+
+          - منبع: [Shadowmere](https://shadowmere.xyz/)؛ پروتکل خروجی: **Shadowsocks** و فرمت سابسکریپشن: **Base64**.
+          - فعال بودن نزد Shadowmere تضمین نمی‌کند سرور از شبکه یا کشور تو متصل شود.
+          - کد کشور از **پرچمِ نام کانفیگ** خوانده می‌شود، نه با آزمایش موقعیت IP.
+          - این پروژه فقط کانفیگ‌های موجود در منبع را دسته‌بندی می‌کند؛ خودش سرور VPN ارائه نمی‌کند.
+          - کدها معمولاً با ISO 3166-1 alpha-2 منطبق‌اند؛ برای بریتانیا `gb` است.
+          '''
+              Path('README.md').write_text(readme, encoding='utf-8')
+              countries = (
+                  '# 🌐 فهرست خودکار کشورهای Shadowmere\n\n'
+                  f'**{len(groups)} کشور · {total} کانفیگ** — این جدول به‌صورت خودکار تولید می‌شود.\n\n'
+                  f'**قالب آدرس:** `{base}<code>`\n\n'
+                  '[راهنمای استفاده](README.md) · '
+                  f'[وضعیت اجرای خودکار]({actions})\n\n'
+                  '| پرچم | نام فارسی | نام کشور در منبع | کد | تعداد سرور | لینک مستقیم |\n'
+                  '|---|---|---|---|---:|---|\n'
+                  + '\n'.join(rows) + '\n\n'
+                  '> کشورهایی که کانفیگ فعال برچسب‌دار ندارند در این جدول نمی‌آیند.\n'
+              )
+              Path('COUNTRIES.md').write_text(countries, encoding='utf-8')
+              print(f'Generated {len(groups)} countries and {total} nodes. Only subs/xx is published.', flush=True)
 
           def main():
-              repo = os.environ.get('GITHUB_REPOSITORY', 'amepartito/usa-sub')
-              branch = os.environ.get('GITHUB_REF_NAME', 'main')
-              groups, dropped = parse_b64_feed(get_bytes(B64_URL))
-              print(f'Skipped {dropped} invalid or country-unknown lines.', flush=True)
-              names = names_for_active_countries()
-              write_outputs(groups, names, repo, branch)
-
+              repo = os.getenv('GITHUB_REPOSITORY', 'amepartito/usa-sub')
+              branch = os.getenv('GITHUB_REF_NAME', 'main')
+              groups, invalid = parse_feed(fetch(SOURCE))
+              print(f'Skipped {invalid} invalid or missing-country nodes.', flush=True)
+              names = optional_country_names()
+              publish_files(groups, names, repo, branch)
 
           if __name__ == '__main__':
               main()
           PYTHON
 
-      - name: Publish subscriptions
+      - name: Commit subscriptions, guide and removal of legacy files
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A -- subs/ COUNTRIES.md us.txt
+          git add -A -- subs README.md COUNTRIES.md
+          if git ls-files --error-unmatch us.txt >/dev/null 2>&1; then
+            git add -u -- us.txt
+          fi
           if ! git diff --cached --quiet; then
-            git commit -m 'Update country subscriptions'
+            git commit -m 'Publish country-only subscriptions and Persian guide'
             git push
           else
-            echo 'Subscriptions unchanged'
+            echo 'No content changes to publish'
           fi
