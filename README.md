@@ -2,63 +2,69 @@
 
 [![Subscription Update](https://github.com/amepartito/usa-sub/actions/workflows/update.yml/badge.svg)](https://github.com/amepartito/usa-sub/actions/workflows/update.yml)
 
-**26 کشور و 218 کانفیگ** در آخرین خروجی ثبت شده‌اند. فقط سرورهای دارای پرچم معتبر در سابسکریپشن فعال Shadowmere دسته‌بندی می‌شوند.
+**24 کشور و 211 کانفیگ** در آخرین دریافت موفق ثبت شده‌اند. هر کشور یک لینک ثابت و یک QR Code مخصوص خودش دارد.
 
-## 🔗 استفاده سریع
-
-آدرس پایه:
+## 🔗 لینک ثابت کشورها
 
 ```text
-https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/
+https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/<code>
 ```
 
-فقط **دو حرف کد کشور را به انتهای آدرس اضافه کن**؛ همه کدها کوچک هستند. مثال:
+فقط دو حرف آخر لینک را تغییر بده: `us` آمریکا، `fr` فرانسه، `de` آلمان و غیره. کدها حروف کوچک هستند.
 
-| کشور | کد | سابسکریپشن |
-|---|---|---|
-| 🇺🇸 آمریکا | `us` | [باز کردن لینک](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/us) |
-| 🇫🇷 فرانسه | `fr` | [باز کردن لینک](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/fr) |
-| 🇩🇪 آلمان | `de` | [باز کردن لینک](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/de) |
-| 🇬🇧 بریتانیا | `gb` | [باز کردن لینک](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/gb) |
-| 🇳🇱 هلند | `nl` | [باز کردن لینک](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/nl) |
-| 🇨🇦 کانادا | `ca` | [باز کردن لینک](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/ca) |
-| 🇯🇵 ژاپن | `jp` | [باز کردن لینک](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/jp) |
+| کشور | کد | اشتراک | QR Code |
+|---|---|---|---|
+| 🇺🇸 آمریکا | `us` | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/us) | [📷 QR](qr/us.png) |
+| 🇫🇷 فرانسه | `fr` | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/fr) | [📷 QR](qr/fr.png) |
+| 🇩🇪 آلمان | `de` | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/de) | [📷 QR](qr/de.png) |
+| 🇬🇧 بریتانیا | `gb` | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/gb) | [📷 QR](qr/gb.png) |
+| 🇳🇱 هلند | `nl` | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/nl) | [📷 QR](qr/nl.png) |
+| 🇨🇦 کانادا | `ca` | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/ca) | [📷 QR](qr/ca.png) |
+| 🇯🇵 ژاپن | `jp` | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/jp) | [📷 QR](qr/jp.png) |
 
-**[📋 فهرست کامل کشورها، تعداد سرورها و لینک هر کشور](https://github.com/amepartito/usa-sub/blob/main/COUNTRIES.md)**
+**[🌐 فهرست تمام کشورها، تعداد کانفیگ‌ها و QR مخصوص هر کشور](https://github.com/amepartito/usa-sub/blob/main/COUNTRIES.md)**
 
-اگر کشوری در فهرست نیست، یعنی در آخرین دریافت موفق، سرور فعالِ برچسب‌دار برای آن پیدا نشده است.
+## 📷 QR Code آماده اسکن
 
-## 📱 نصب در Hiddify یا Streisand
+<a href="qr/us.png"><img src="qr/us.png" width="120" alt="QR subscription US"></a>
+<a href="qr/fr.png"><img src="qr/fr.png" width="120" alt="QR subscription FR"></a>
+<a href="qr/de.png"><img src="qr/de.png" width="120" alt="QR subscription DE"></a>
+<a href="qr/gb.png"><img src="qr/gb.png" width="120" alt="QR subscription GB"></a>
+<a href="qr/nl.png"><img src="qr/nl.png" width="120" alt="QR subscription NL"></a>
 
-1. لینک کشور موردنظر را از جدول بالا یا فایل `COUNTRIES.md` کپی کن.
-2. در برنامه، گزینه افزودن پروفایل یا سابسکریپشن با URL را انتخاب کن.
-3. لینک را وارد کن و پروفایل را به‌روزرسانی کن.
-4. در دفعات بعد، همان لینک ثابت را نگه دار و پروفایل را Refresh/Update کن.
+این QRها **آدرس سابسکریپشن** را دارند، نه تنظیمات یک سرور؛ با آپدیت فهرست سرورها نیازی به تغییر یا اسکن دوباره QR نیست.
+
+- با یک دستگاه QR را باز کن؛ در گوشی دوم وارد `Hiddify` یا `Streisand` شو، `+` و سپس `Scan QR` را بزن.
+- اگر تنها یک گوشی داری، لینک کشور را کپی کن؛ یا اگر برنامه امکان خواندن QR از گالری را دارد، تصویر را ذخیره و از گالری انتخاب کن.
+- بعد از وارد شدن پروفایل، با گزینه `Update/Refresh` فهرست جدید سرورها را دریافت کن.
 
 ## 🔄 به‌روزرسانی خودکار
 
-- GitHub Actions هر **۳ ساعت** برای دریافت اطلاعات جدید تلاش می‌کند؛ زمان‌بندی ممکن است با تأخیر اجرا شود.
-- در [صفحه Actions](https://github.com/amepartito/usa-sub/actions/workflows/update.yml) می‌توان نتیجه اجراها را دید و `Run workflow` را دستی اجرا کرد.
-- اگر دریافت داده خراب شود، Workflow با خطا متوقف می‌شود و فایل‌های منتشرشده قبلی تغییر نمی‌کنند.
-- فایل‌های کشورهایی که دیگر در خروجی معتبر نباشند از فهرست حذف می‌شوند.
+- GitHub Actions هر **۳ ساعت** تلاش می‌کند داده‌های تازه Shadowmere را دریافت کند؛ اجرای زمان‌بندی‌شده ممکن است تأخیر داشته باشد.
+- ساب‌ها در `subs/xx` و تصویرهای QR در `qr/xx.png` منتشر می‌شوند.
+- اگر دریافت منبع ناموفق شود، اجرا با خطا متوقف می‌شود و فایل‌های منتشرشده قبلی دست‌نخورده می‌مانند.
+- اگر کشوری دیگر سرور فعال برچسب‌دار نداشته باشد، فایل ساب و QR آن کشور در اجرای موفق بعدی حذف می‌شوند.
+- [نمایش اجراها و اجرای دستی](https://github.com/amepartito/usa-sub/actions/workflows/update.yml)
 
-## 🧹 ساختار فایل‌ها
+## 🧹 ساختار پروژه
 
 ```text
-subs/us      آمریکا
-subs/fr      فرانسه
-subs/de      آلمان
-...          سایر کشورهای موجود
-COUNTRIES.md  فهرست خودکار کشورها و لینک‌ها
-README.md     همین راهنمای فارسی
+.github/workflows/update.yml    به‌روزرسانی خودکار
+subs/us                         ساب آمریکا
+subs/fr                         ساب فرانسه
+subs/de                         ساب آلمان
+qr/us.png                       QR آمریکا
+qr/fr.png                       QR فرانسه
+qr/de.png                       QR آلمان
+COUNTRIES.md                    فهرست خودکار کشورها و QRها
+README.md                       راهنمای فارسی در GitHub
 ```
 
-دیگر فایلی به نام `us.txt` در ریشه مخزن یا فایل‌های تکراری `subs/us.txt` و مشابه آن منتشر نمی‌شود. **آدرس قدیمی `.../main/us.txt` را از برنامه پاک کن و از `.../main/subs/us` استفاده کن.**
+فایل قدیمی `us.txt` و فایل‌های تکراری `.txt` ساخته نمی‌شوند. **لینک نهایی آمریکا همیشه `.../subs/us` است.**
 
 ## ⚠️ نکات مهم
 
-- منبع: [Shadowmere](https://shadowmere.xyz/)؛ پروتکل خروجی: **Shadowsocks** و فرمت سابسکریپشن: **Base64**.
-- فعال بودن نزد Shadowmere تضمین نمی‌کند سرور از شبکه یا کشور تو متصل شود.
-- کد کشور از **پرچمِ نام کانفیگ** خوانده می‌شود، نه با آزمایش موقعیت IP.
-- این پروژه فقط کانفیگ‌های موجود در منبع را دسته‌بندی می‌کند؛ خودش سرور VPN ارائه نمی‌کند.
-- کدها معمولاً با ISO 3166-1 alpha-2 منطبق‌اند؛ برای بریتانیا `gb` است.
+- منبع: [Shadowmere](https://shadowmere.xyz/)؛ تنها پروتکل **Shadowsocks** و فرمت Base64 از منبع فعلی منتشر می‌شود.
+- فعال‌بودن سرور نزد Shadowmere به معنی اتصال تضمینی از اینترنت تو نیست.
+- کشور از پرچم کنار نام کانفیگ مشخص می‌شود، نه تست مستقل موقعیت IP خروجی.
+- این پروژه صرفاً کانفیگ‌های منبع عمومی را تفکیک می‌کند و سرور VPN ارائه نمی‌دهد.
