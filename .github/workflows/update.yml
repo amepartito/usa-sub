@@ -1,0 +1,119 @@
+name: USA-only Shadowsocks Subscription
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 */3 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: usa-shadowmere-sub
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Build USA-only Base64 subscription
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import base64
+          import json
+          import time
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+          from pathlib import Path
+
+          API = 'https://shadowmere.xyz/api/proxies/'
+          COUNTRY = 'US'
+          nodes, seen = [], set()
+          total_pages = None
+
+          def fetch(page):
+              params = urllib.parse.urlencode({
+                  'is_active': 'true',
+                  'location_country_code': COUNTRY,
+                  'page': page,
+              })
+              request = urllib.request.Request(
+                  API + '?' + params,
+                  headers={
+                      'Accept': 'application/json',
+                      'User-Agent': 'USA-sub-updater/1.0',
+                  },
+              )
+              for attempt in range(3):
+                  try:
+                      with urllib.request.urlopen(request, timeout=30) as response:
+                          if response.status != 200:
+                              raise RuntimeError('Source HTTP ' + str(response.status))
+                          return json.load(response)
+                  except (urllib.error.HTTPError, urllib.error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+                      if attempt == 2:
+                          raise RuntimeError('Unable to fetch source API') from exc
+                      print(f'Retrying API page {page}: {type(exc).__name__}', flush=True)
+                      time.sleep(30 if attempt == 0 else 65)
+
+          for page in range(1, 21):
+              if page > 1:
+                  # Avoid hitting the public API's request-rate limit.
+                  time.sleep(22)
+              data = fetch(page)
+              if not isinstance(data, dict) or not isinstance(data.get('results'), list):
+                  raise RuntimeError('Unexpected API response; keeping previous subscription')
+              pages = data.get('total_pages')
+              if not isinstance(pages, int) or pages < 1:
+                  raise RuntimeError('Missing pagination data; keeping previous subscription')
+              total_pages = pages
+              if total_pages > 20:
+                  raise RuntimeError('More than 20 pages; refusing a truncated subscription')
+
+              for item in data['results']:
+                  if not isinstance(item, dict):
+                      continue
+                  if item.get('location_country_code') != COUNTRY or item.get('is_active') is not True:
+                      continue
+                  uri = item.get('url')
+                  if not isinstance(uri, str) or not uri.strip().startswith('ss://'):
+                      continue
+                  uri = uri.strip().split('#', 1)[0]
+                  if uri in seen:
+                      continue
+                  seen.add(uri)
+                  location = str(item.get('location') or 'United States').strip()
+                  label = '🇺🇸 ' + location[:100]
+                  nodes.append(uri + '#' + urllib.parse.quote(label, safe=''))
+
+              if page >= total_pages:
+                  break
+
+          if not nodes:
+              raise RuntimeError('No active US Shadowsocks servers; keeping previous subscription')
+
+          content = ('\n'.join(nodes) + '\n').encode('utf-8')
+          Path('us.txt').write_text(base64.b64encode(content).decode('ascii') + '\n', encoding='ascii')
+          print(f'Prepared {len(nodes)} active US Shadowsocks servers in us.txt')
+          PY
+
+      - name: Publish US subscription
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add us.txt
+          if ! git diff --cached --quiet; then
+            git commit -m 'Update USA-only Shadowsocks subscription'
+            git push
+          else
+            echo 'No changes to publish'
+          fi
