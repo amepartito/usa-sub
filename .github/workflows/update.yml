@@ -22,10 +22,18 @@ jobs:
         with:
           persist-credentials: true
 
-      - name: Generate country subscriptions and Persian GitHub guides
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install QR generator
+        run: python -m pip install --disable-pip-version-check 'qrcode[pil]==8.2'
+
+      - name: Generate country subscriptions, QR images and Persian guides
         shell: bash
         run: |
-          python3 - <<'PYTHON'
+          python - <<'PYTHON'
           import base64
           import binascii
           import json
@@ -38,6 +46,8 @@ jobs:
           from collections import defaultdict
           from pathlib import Path
 
+          import qrcode
+
           SOURCE = 'https://shadowmere.xyz/api/b64sub/'
           COUNTRY_NAMES = 'https://shadowmere.xyz/api/country-codes/'
           FLAG_RE = re.compile(r'^([\U0001F1E6-\U0001F1FF]{2})(?:\s|$)')
@@ -46,25 +56,26 @@ jobs:
               'ae': 'امارات', 'al': 'آلبانی', 'ar': 'آرژانتین',
               'at': 'اتریش', 'au': 'استرالیا', 'be': 'بلژیک',
               'br': 'برزیل', 'ca': 'کانادا', 'ch': 'سوئیس',
-              'cn': 'چین', 'cz': 'چک', 'de': 'آلمان',
-              'dk': 'دانمارک', 'eg': 'مصر', 'es': 'اسپانیا',
-              'fi': 'فنلاند', 'fr': 'فرانسه', 'gb': 'بریتانیا',
-              'gr': 'یونان', 'hk': 'هنگ‌کنگ', 'hu': 'مجارستان',
-              'id': 'اندونزی', 'ie': 'ایرلند', 'il': 'اسرائیل',
-              'in': 'هند', 'ir': 'ایران', 'it': 'ایتالیا',
-              'jp': 'ژاپن', 'kr': 'کره جنوبی', 'lu': 'لوکزامبورگ',
-              'mx': 'مکزیک', 'my': 'مالزی', 'nl': 'هلند',
-              'no': 'نروژ', 'nz': 'نیوزیلند', 'ph': 'فیلیپین',
-              'pl': 'لهستان', 'pt': 'پرتغال', 'ro': 'رومانی',
-              'ru': 'روسیه', 'sa': 'عربستان سعودی', 'se': 'سوئد',
-              'sg': 'سنگاپور', 'th': 'تایلند', 'tr': 'ترکیه',
-              'tw': 'تایوان', 'ua': 'اوکراین', 'uk': 'بریتانیا',
-              'us': 'آمریکا', 'vn': 'ویتنام', 'za': 'آفریقای جنوبی',
+              'cl': 'شیلی', 'cn': 'چین', 'cz': 'چک',
+              'de': 'آلمان', 'dk': 'دانمارک', 'eg': 'مصر',
+              'es': 'اسپانیا', 'fi': 'فنلاند', 'fr': 'فرانسه',
+              'gb': 'بریتانیا', 'gr': 'یونان', 'hk': 'هنگ‌کنگ',
+              'hu': 'مجارستان', 'id': 'اندونزی', 'ie': 'ایرلند',
+              'il': 'اسرائیل', 'in': 'هند', 'ir': 'ایران',
+              'it': 'ایتالیا', 'jp': 'ژاپن', 'kr': 'کره جنوبی',
+              'lu': 'لوکزامبورگ', 'mx': 'مکزیک', 'my': 'مالزی',
+              'nl': 'هلند', 'no': 'نروژ', 'nz': 'نیوزیلند',
+              'ph': 'فیلیپین', 'pl': 'لهستان', 'pt': 'پرتغال',
+              'ro': 'رومانی', 'ru': 'روسیه', 'sa': 'عربستان',
+              'se': 'سوئد', 'sg': 'سنگاپور', 'th': 'تایلند',
+              'tr': 'ترکیه', 'tw': 'تایوان', 'ua': 'اوکراین',
+              'uk': 'بریتانیا', 'us': 'آمریکا', 'vn': 'ویتنام',
+              'za': 'آفریقای جنوبی',
           }
 
           def fetch(url, retries=3):
               request = urllib.request.Request(url, headers={
-                  'User-Agent': 'Country-Subs-GitHub/2.0',
+                  'User-Agent': 'Country-Subs-GitHub/3.0',
                   'Accept': 'text/plain,application/json;q=0.9,*/*;q=0.5',
               })
               for attempt in range(retries):
@@ -118,7 +129,7 @@ jobs:
                   seen[code].add(uri)
                   groups[code].append(uri + '#' + urllib.parse.quote(label, safe=''))
               if not groups:
-                  raise RuntimeError('No valid country-tagged nodes; preserving published files')
+                  raise RuntimeError('No country-tagged servers; existing published files preserved')
               return dict(groups), invalid
 
           def optional_country_names():
@@ -135,7 +146,7 @@ jobs:
                       and isinstance(row.get('name'), str)
                   }
               except (RuntimeError, ValueError, UnicodeDecodeError):
-                  print('Country names unavailable; code and Persian labels still work.')
+                  print('Country names unavailable; fallback labels are sufficient.')
                   return {}
 
           def flag(code):
@@ -144,117 +155,139 @@ jobs:
           def safe_cell(value):
               return str(value).replace('|', '\\|').replace('\r', ' ').replace('\n', ' ')
 
+          def make_qr(url, filename):
+              qr = qrcode.QRCode(
+                  version=6,
+                  error_correction=qrcode.constants.ERROR_CORRECT_M,
+                  box_size=9,
+                  border=4,
+              )
+              qr.add_data(url)
+              qr.make(fit=True)
+              qr.make_image(fill_color='black', back_color='white').save(filename, format='PNG', optimize=True)
+
           def publish_files(groups, names, repo, branch):
               out = Path('subs')
+              qrs = Path('qr')
               out.mkdir(exist_ok=True)
-              # The only supported URL format is /subs/xx (two lowercase letters).
-              # Remove legacy duplicate /subs/xx.txt files and missing countries.
+              qrs.mkdir(exist_ok=True)
+
+              # Only remove files owned by this workflow; preserve unrelated repository files.
               for entry in out.iterdir():
-                  if not entry.is_file():
-                      continue
-                  if COUNTRY_RE.fullmatch(entry.name) or (
-                      entry.name.endswith('.txt') and COUNTRY_RE.fullmatch(entry.name[:-4])
+                  if entry.is_file() and (
+                      COUNTRY_RE.fullmatch(entry.name)
+                      or (entry.name.endswith('.txt') and COUNTRY_RE.fullmatch(entry.name[:-4]))
                   ):
                       entry.unlink()
-              # Delete the old root-level USA subscription. Never create it again.
+              for entry in qrs.iterdir():
+                  if entry.is_file() and entry.suffix == '.png' and COUNTRY_RE.fullmatch(entry.stem):
+                      entry.unlink()
               Path('us.txt').unlink(missing_ok=True)
 
               base = f'https://raw.githubusercontent.com/{repo}/{branch}/subs/'
               rows = []
               for code, nodes in sorted(groups.items()):
+                  url = base + code
                   payload = ('\n'.join(nodes) + '\n').encode('utf-8')
                   (out / code).write_text(base64.b64encode(payload).decode('ascii') + '\n', encoding='ascii')
-                  name = safe_cell(names.get(code) or code.upper())
+                  make_qr(url, qrs / f'{code}.png')
+                  country = safe_cell(names.get(code) or code.upper())
                   persian = FA.get(code, '—')
                   rows.append(
-                      f'| {flag(code)} | {persian} | {name} | `{code}` | {len(nodes)} | '
-                      f'[دریافت ساب]({base}{code}) |'
+                      f'| {flag(code)} | {persian} | {country} | `{code}` | {len(nodes)} | '
+                      f'[لینک ساب]({url}) | [📷 QR](qr/{code}.png) |'
                   )
 
               total = sum(len(items) for items in groups.values())
               link = f'https://github.com/{repo}/blob/{branch}/COUNTRIES.md'
               actions = f'https://github.com/{repo}/actions/workflows/update.yml'
-              sample = [c for c in ('us', 'fr', 'de', 'gb', 'nl', 'ca', 'jp') if c in groups]
-              if len(sample) < 4:
+              sample = [c for c in ('us','fr','de','gb','nl','ca','jp') if c in groups]
+              if len(sample) < 3:
                   sample = sorted(groups)[:7]
               examples = '\n'.join(
                   f'| {flag(c)} {FA.get(c, names.get(c, c.upper()))} | `{c}` | '
-                  f'[باز کردن لینک]({base}{c}) |' for c in sample
+                  f'[لینک ساب]({base}{c}) | [📷 QR](qr/{c}.png) |'
+                  for c in sample
               )
-
+              qr_preview = '\n'.join(
+                  f'<a href="qr/{c}.png"><img src="qr/{c}.png" width="120" '
+                  f'alt="QR subscription {c.upper()}"></a>' for c in sample[:5]
+              )
               readme = f'''# 🌍 سابسکریپشن Shadowmere بر اساس کشور
 
           [![Subscription Update](https://github.com/{repo}/actions/workflows/update.yml/badge.svg)]({actions})
 
-          **{len(groups)} کشور و {total} کانفیگ** در آخرین خروجی ثبت شده‌اند. فقط سرورهای دارای پرچم معتبر در سابسکریپشن فعال Shadowmere دسته‌بندی می‌شوند.
+          **{len(groups)} کشور و {total} کانفیگ** در آخرین دریافت موفق ثبت شده‌اند. هر کشور یک لینک ثابت و یک QR Code مخصوص خودش دارد.
 
-          ## 🔗 استفاده سریع
-
-          آدرس پایه:
+          ## 🔗 لینک ثابت کشورها
 
           ```text
-          {base}
+          {base}<code>
           ```
 
-          فقط **دو حرف کد کشور را به انتهای آدرس اضافه کن**؛ همه کدها کوچک هستند. مثال:
+          فقط دو حرف آخر لینک را تغییر بده: `us` آمریکا، `fr` فرانسه، `de` آلمان و غیره. کدها حروف کوچک هستند.
 
-          | کشور | کد | سابسکریپشن |
-          |---|---|---|
+          | کشور | کد | اشتراک | QR Code |
+          |---|---|---|---|
           {examples}
 
-          **[📋 فهرست کامل کشورها، تعداد سرورها و لینک هر کشور]({link})**
+          **[🌐 فهرست تمام کشورها، تعداد کانفیگ‌ها و QR مخصوص هر کشور]({link})**
 
-          اگر کشوری در فهرست نیست، یعنی در آخرین دریافت موفق، سرور فعالِ برچسب‌دار برای آن پیدا نشده است.
+          ## 📷 QR Code آماده اسکن
 
-          ## 📱 نصب در Hiddify یا Streisand
+          {qr_preview}
 
-          1. لینک کشور موردنظر را از جدول بالا یا فایل `COUNTRIES.md` کپی کن.
-          2. در برنامه، گزینه افزودن پروفایل یا سابسکریپشن با URL را انتخاب کن.
-          3. لینک را وارد کن و پروفایل را به‌روزرسانی کن.
-          4. در دفعات بعد، همان لینک ثابت را نگه دار و پروفایل را Refresh/Update کن.
+          این QRها **آدرس سابسکریپشن** را دارند، نه تنظیمات یک سرور؛ با آپدیت فهرست سرورها نیازی به تغییر یا اسکن دوباره QR نیست.
+
+          - با یک دستگاه QR را باز کن؛ در گوشی دوم وارد `Hiddify` یا `Streisand` شو، `+` و سپس `Scan QR` را بزن.
+          - اگر تنها یک گوشی داری، لینک کشور را کپی کن؛ یا اگر برنامه امکان خواندن QR از گالری را دارد، تصویر را ذخیره و از گالری انتخاب کن.
+          - بعد از وارد شدن پروفایل، با گزینه `Update/Refresh` فهرست جدید سرورها را دریافت کن.
 
           ## 🔄 به‌روزرسانی خودکار
 
-          - GitHub Actions هر **۳ ساعت** برای دریافت اطلاعات جدید تلاش می‌کند؛ زمان‌بندی ممکن است با تأخیر اجرا شود.
-          - در [صفحه Actions]({actions}) می‌توان نتیجه اجراها را دید و `Run workflow` را دستی اجرا کرد.
-          - اگر دریافت داده خراب شود، Workflow با خطا متوقف می‌شود و فایل‌های منتشرشده قبلی تغییر نمی‌کنند.
-          - فایل‌های کشورهایی که دیگر در خروجی معتبر نباشند از فهرست حذف می‌شوند.
+          - GitHub Actions هر **۳ ساعت** تلاش می‌کند داده‌های تازه Shadowmere را دریافت کند؛ اجرای زمان‌بندی‌شده ممکن است تأخیر داشته باشد.
+          - ساب‌ها در `subs/xx` و تصویرهای QR در `qr/xx.png` منتشر می‌شوند.
+          - اگر دریافت منبع ناموفق شود، اجرا با خطا متوقف می‌شود و فایل‌های منتشرشده قبلی دست‌نخورده می‌مانند.
+          - اگر کشوری دیگر سرور فعال برچسب‌دار نداشته باشد، فایل ساب و QR آن کشور در اجرای موفق بعدی حذف می‌شوند.
+          - [نمایش اجراها و اجرای دستی]({actions})
 
-          ## 🧹 ساختار فایل‌ها
+          ## 🧹 ساختار پروژه
 
           ```text
-          subs/us      آمریکا
-          subs/fr      فرانسه
-          subs/de      آلمان
-          ...          سایر کشورهای موجود
-          COUNTRIES.md  فهرست خودکار کشورها و لینک‌ها
-          README.md     همین راهنمای فارسی
+          .github/workflows/update.yml    به‌روزرسانی خودکار
+          subs/us                         ساب آمریکا
+          subs/fr                         ساب فرانسه
+          subs/de                         ساب آلمان
+          qr/us.png                       QR آمریکا
+          qr/fr.png                       QR فرانسه
+          qr/de.png                       QR آلمان
+          COUNTRIES.md                    فهرست خودکار کشورها و QRها
+          README.md                       راهنمای فارسی در GitHub
           ```
 
-          دیگر فایلی به نام `us.txt` در ریشه مخزن یا فایل‌های تکراری `subs/us.txt` و مشابه آن منتشر نمی‌شود. **آدرس قدیمی `.../main/us.txt` را از برنامه پاک کن و از `.../main/subs/us` استفاده کن.**
+          فایل قدیمی `us.txt` و فایل‌های تکراری `.txt` ساخته نمی‌شوند. **لینک نهایی آمریکا همیشه `.../subs/us` است.**
 
           ## ⚠️ نکات مهم
 
-          - منبع: [Shadowmere](https://shadowmere.xyz/)؛ پروتکل خروجی: **Shadowsocks** و فرمت سابسکریپشن: **Base64**.
-          - فعال بودن نزد Shadowmere تضمین نمی‌کند سرور از شبکه یا کشور تو متصل شود.
-          - کد کشور از **پرچمِ نام کانفیگ** خوانده می‌شود، نه با آزمایش موقعیت IP.
-          - این پروژه فقط کانفیگ‌های موجود در منبع را دسته‌بندی می‌کند؛ خودش سرور VPN ارائه نمی‌کند.
-          - کدها معمولاً با ISO 3166-1 alpha-2 منطبق‌اند؛ برای بریتانیا `gb` است.
+          - منبع: [Shadowmere](https://shadowmere.xyz/)؛ تنها پروتکل **Shadowsocks** و فرمت Base64 از منبع فعلی منتشر می‌شود.
+          - فعال‌بودن سرور نزد Shadowmere به معنی اتصال تضمینی از اینترنت تو نیست.
+          - کشور از پرچم کنار نام کانفیگ مشخص می‌شود، نه تست مستقل موقعیت IP خروجی.
+          - این پروژه صرفاً کانفیگ‌های منبع عمومی را تفکیک می‌کند و سرور VPN ارائه نمی‌دهد.
           '''
               Path('README.md').write_text(readme, encoding='utf-8')
               countries = (
-                  '# 🌐 فهرست خودکار کشورهای Shadowmere\n\n'
-                  f'**{len(groups)} کشور · {total} کانفیگ** — این جدول به‌صورت خودکار تولید می‌شود.\n\n'
-                  f'**قالب آدرس:** `{base}<code>`\n\n'
-                  '[راهنمای استفاده](README.md) · '
-                  f'[وضعیت اجرای خودکار]({actions})\n\n'
-                  '| پرچم | نام فارسی | نام کشور در منبع | کد | تعداد سرور | لینک مستقیم |\n'
-                  '|---|---|---|---|---:|---|\n'
+                  '# 🌐 فهرست خودکار کشورهای Shadowmere و QR Code\n\n'
+                  f'**{len(groups)} کشور · {total} کانفیگ** در آخرین دریافت موفق.\n\n'
+                  f'**قالب لینک ساب:** `{base}<code>`\n\n'
+                  '[راهنمای فارسی](README.md) · '
+                  f'[وضعیت GitHub Actions]({actions})\n\n'
+                  '| پرچم | نام فارسی | نام در منبع | کد | تعداد سرور | لینک ساب | QR Code |\n'
+                  '|---|---|---|---|---:|---|---|\n'
                   + '\n'.join(rows) + '\n\n'
-                  '> کشورهایی که کانفیگ فعال برچسب‌دار ندارند در این جدول نمی‌آیند.\n'
+                  '> برای بازکردن تصویر QR روی لینک ستون آخر بزن. کشورهای بدون سرور فعال در این جدول نمی‌آیند.\n'
               )
               Path('COUNTRIES.md').write_text(countries, encoding='utf-8')
-              print(f'Generated {len(groups)} countries and {total} nodes. Only subs/xx is published.', flush=True)
+              print(f'Generated {len(groups)} countries, {total} nodes and {len(groups)} QR images.', flush=True)
 
           def main():
               repo = os.getenv('GITHUB_REPOSITORY', 'amepartito/usa-sub')
@@ -268,17 +301,17 @@ jobs:
               main()
           PYTHON
 
-      - name: Commit subscriptions, guide and removal of legacy files
+      - name: Commit subscriptions, QR images and GitHub guides
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A -- subs README.md COUNTRIES.md
+          git add -A -- subs qr README.md COUNTRIES.md
           if git ls-files --error-unmatch us.txt >/dev/null 2>&1; then
             git add -u -- us.txt
           fi
           if ! git diff --cached --quiet; then
-            git commit -m 'Publish country-only subscriptions and Persian guide'
+            git commit -m 'Publish country subscriptions with QR codes and Persian guides'
             git push
           else
             echo 'No content changes to publish'
