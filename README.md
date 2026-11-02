@@ -2,7 +2,7 @@
 
 [![Subscription Update](https://github.com/amepartito/usa-sub/actions/workflows/update.yml/badge.svg)](https://github.com/amepartito/usa-sub/actions/workflows/update.yml)
 
-**23 کشور و 182 کانفیگ** در آخرین دریافت موفق ثبت شده‌اند. هر کشور یک لینک ثابت و یک QR Code مخصوص خودش دارد.
+**24 کشور و 211 کانفیگ** در آخرین دریافت موفق ثبت شده‌اند. هر کشور یک لینک ثابت و یک QR Code مخصوص خودش دارد.
 
 ## 🔗 لینک ثابت کشورها
 
