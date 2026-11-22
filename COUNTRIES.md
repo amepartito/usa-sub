@@ -1,6 +1,6 @@
 # 🌐 فهرست خودکار کشورهای Shadowmere و QR Code
 
-**19 کشور · 243 کانفیگ** در آخرین دریافت موفق.
+**21 کشور · 256 کانفیگ** در آخرین دریافت موفق.
 
 **قالب لینک ساب:** `https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/<code>`
 
@@ -9,23 +9,25 @@
 | پرچم | نام فارسی | نام در منبع | کد | تعداد سرور | لینک ساب | QR Code |
 |---|---|---|---|---:|---|---|
 | 🇦🇪 | امارات | United Arab Emirates | `ae` | 2 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/ae) | [📷 QR](qr/ae.png) |
+| 🇦🇱 | آلبانی | Albania | `al` | 1 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/al) | [📷 QR](qr/al.png) |
 | 🇦🇹 | اتریش | Austria | `at` | 2 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/at) | [📷 QR](qr/at.png) |
-| 🇨🇦 | کانادا | Canada | `ca` | 13 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/ca) | [📷 QR](qr/ca.png) |
+| 🇨🇦 | کانادا | Canada | `ca` | 15 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/ca) | [📷 QR](qr/ca.png) |
 | 🇨🇭 | سوئیس | Switzerland | `ch` | 7 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/ch) | [📷 QR](qr/ch.png) |
+| 🇨🇱 | شیلی | Chile | `cl` | 1 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/cl) | [📷 QR](qr/cl.png) |
 | 🇨🇿 | چک | Czechia | `cz` | 1 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/cz) | [📷 QR](qr/cz.png) |
-| 🇩🇪 | آلمان | Germany | `de` | 20 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/de) | [📷 QR](qr/de.png) |
+| 🇩🇪 | آلمان | Germany | `de` | 22 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/de) | [📷 QR](qr/de.png) |
 | 🇪🇸 | اسپانیا | Spain | `es` | 5 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/es) | [📷 QR](qr/es.png) |
-| 🇫🇷 | فرانسه | France | `fr` | 10 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/fr) | [📷 QR](qr/fr.png) |
-| 🇬🇧 | بریتانیا | United Kingdom | `gb` | 11 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/gb) | [📷 QR](qr/gb.png) |
+| 🇫🇷 | فرانسه | France | `fr` | 8 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/fr) | [📷 QR](qr/fr.png) |
+| 🇬🇧 | بریتانیا | United Kingdom | `gb` | 9 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/gb) | [📷 QR](qr/gb.png) |
 | 🇭🇰 | هنگ‌کنگ | Hong Kong | `hk` | 1 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/hk) | [📷 QR](qr/hk.png) |
-| 🇮🇹 | ایتالیا | Italy | `it` | 15 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/it) | [📷 QR](qr/it.png) |
+| 🇮🇹 | ایتالیا | Italy | `it` | 17 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/it) | [📷 QR](qr/it.png) |
 | 🇯🇵 | ژاپن | Japan | `jp` | 7 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/jp) | [📷 QR](qr/jp.png) |
-| 🇳🇱 | هلند | The Netherlands | `nl` | 61 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/nl) | [📷 QR](qr/nl.png) |
+| 🇳🇱 | هلند | The Netherlands | `nl` | 67 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/nl) | [📷 QR](qr/nl.png) |
 | 🇳🇴 | نروژ | Norway | `no` | 1 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/no) | [📷 QR](qr/no.png) |
 | 🇷🇺 | روسیه | Russia | `ru` | 4 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/ru) | [📷 QR](qr/ru.png) |
-| 🇸🇪 | سوئد | Sweden | `se` | 2 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/se) | [📷 QR](qr/se.png) |
+| 🇸🇪 | سوئد | Sweden | `se` | 1 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/se) | [📷 QR](qr/se.png) |
 | 🇸🇬 | سنگاپور | Singapore | `sg` | 8 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/sg) | [📷 QR](qr/sg.png) |
-| 🇺🇸 | آمریکا | United States | `us` | 71 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/us) | [📷 QR](qr/us.png) |
-| 🇿🇦 | آفریقای جنوبی | South Africa | `za` | 2 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/za) | [📷 QR](qr/za.png) |
+| 🇺🇸 | آمریکا | United States | `us` | 74 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/us) | [📷 QR](qr/us.png) |
+| 🇿🇦 | آفریقای جنوبی | South Africa | `za` | 3 | [لینک ساب](https://raw.githubusercontent.com/amepartito/usa-sub/main/subs/za) | [📷 QR](qr/za.png) |
 
 > برای بازکردن تصویر QR روی لینک ستون آخر بزن. کشورهای بدون سرور فعال در این جدول نمی‌آیند.
